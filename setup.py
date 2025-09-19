@@ -5,8 +5,8 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     description="A package for categorizing test results.",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Anurag",
+    author_email="anuragsinha003@gmail.com",
     license="MIT",
     install_requires=[],
 )
