@@ -26,8 +26,9 @@ jobs:
         run: |
           python -m build
 
-      - name: Publish package to PyPI
+      - name: Publish package to PyPI (Trusted Publishing)
         uses: pypa/gh-action-pypi-publish@v1.8.12
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          repository_url: https://upload.pypi.org/legacy/
+        env:
+          PYPI_TRUSTED_PUBLISHING: true
