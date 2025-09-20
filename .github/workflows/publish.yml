@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.x'
 
       - name: List all files recursively
         run: ls -lR
@@ -30,7 +30,7 @@ jobs:
         run: rm -rf dist build *.egg-info
 
       - name: Build package
-        run: python -m build
+        run: python -m build --no-isolation
 
       - name: Show Python and packaging tool versions
         run: |
