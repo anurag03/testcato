@@ -1,3 +1,3 @@
 # Package metadata for wheel
 __title__ = "testcato"
-__version__ = "1.0.8"
+__version__ = "1.0.9"
