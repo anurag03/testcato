@@ -30,7 +30,7 @@ jobs:
         run: rm -rf dist build *.egg-info
 
       - name: Build package
-        run: python -m build --no-isolation
+        run: python -m build
 
       - name: Show Python and packaging tool versions
         run: |
