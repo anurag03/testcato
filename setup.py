@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="testcato",
-    version="1.1.3",
+    version="1.1.4",
     packages=find_packages(),
     description="A package for categorizing test results.",
     author="Anurag",
