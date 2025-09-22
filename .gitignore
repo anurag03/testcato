@@ -13,11 +13,13 @@ ENV/
 # VS Code
 .vscode/
 
+
 # Test and coverage
 htmlcov/
 .coverage
 .tox/
 .pytest_cache/
+testcato_result/
 
 # Distribution
 build/
