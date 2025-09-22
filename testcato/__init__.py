@@ -1,7 +1,7 @@
 
 # Package metadata for wheel
 __title__ = "testcato"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 
 # Automatically create config file if not present
 import os
