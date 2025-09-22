@@ -7,13 +7,14 @@
 #
 # agent1:
 #   type: openai
-#   model: gpt-4
-#   api_key: YOUR_OPENAI_API_KEY
+#   model: gpt-4.1-mini
+#   api_key: <YOUR_OPENAI_API_KEY>
+#   api_url: https://api.openai.com/v1/chat/completions
 #
 # Add more agents below as agent2, agent3, etc.
 # agent2:
 #   type: azure
 #   model: gpt-4
 #   api_key: YOUR_AZURE_API_KEY
-
+#   api_url: https://your.azure.endpoint/api
 
