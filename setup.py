@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="testcato",
-    version="1.1.9",
+    version="1.2.0",
     packages=find_packages(),
     description="A package for categorizing test results.",
     long_description=long_description,
@@ -14,4 +14,9 @@ setup(
     author_email="anuragsinha003@gmail.com",
     license="MIT",
     install_requires=[],
+    entry_points={
+        "pytest11": [
+            "testcato = testcato.pytest_testcato",
+        ],
+    },
 )
