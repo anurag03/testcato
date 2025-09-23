@@ -1,5 +1,6 @@
 # Core logic for categorizing test results
 
+
 class TestCategorizer:
     def __init__(self):
         pass
@@ -10,10 +11,10 @@ class TestCategorizer:
         :param test_results: List of test result dicts
         :return: Dict with categories as keys and lists of test names as values
         """
-        categories = {'passed': [], 'failed': [], 'skipped': []}
+        categories = {"passed": [], "failed": [], "skipped": []}
         for result in test_results:
-            status = result.get('status')
-            name = result.get('name')
+            status = result.get("status")
+            name = result.get("name")
             if status in categories:
                 categories[status].append(name)
         return categories
