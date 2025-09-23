@@ -1,17 +1,21 @@
 import re
-import pytest
+
+# import pytest  # Unused import removed
 import os
 import datetime
-## import xml.etree.ElementTree as ET  # No longer needed, switched to JSONL
+
+# import xml.etree.ElementTree as ET  # No longer needed, switched to JSONL
 from .categorizer import TestCategorizer
+
 
 def pytest_addoption(parser):
     parser.addoption(
         "--testcato",
         action="store_true",
         default=False,
-        help="Categorize test results using testcato"
+        help="Categorize test results using testcato",
     )
+
 
 def pytest_configure(config):
     if config.getoption("--testcato"):
@@ -20,33 +24,36 @@ def pytest_configure(config):
         if getattr(config.option, "verbose", 0) < 3:
             config.option.verbose = 3
 
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     def remove_ansi_codes(text):
-        ansi_escape = re.compile(r'\x1B[@-_][0-?]*[ -/]*[@-~]')
-        return ansi_escape.sub('', text)
+        ansi_escape = re.compile(r"\x1B[@-_][0-?]*[ -/]*[@-~]")
+        return ansi_escape.sub("", text)
+
     if config.getoption("--testcato"):
         results = []
         tracebacks = []
         for report in terminalreporter.getreports("passed"):
-            results.append({'name': report.nodeid, 'status': 'passed'})
+            results.append({"name": report.nodeid, "status": "passed"})
         for report in terminalreporter.getreports("failed"):
-            results.append({'name': report.nodeid, 'status': 'failed'})
-            if hasattr(report, 'longrepr') and report.longrepr:
+            results.append({"name": report.nodeid, "status": "failed"})
+            if hasattr(report, "longrepr") and report.longrepr:
                 tb = remove_ansi_codes(str(report.longrepr))
-                tracebacks.append({'name': report.nodeid, 'traceback': tb})
+                tracebacks.append({"name": report.nodeid, "traceback": tb})
         for report in terminalreporter.getreports("skipped"):
-            results.append({'name': report.nodeid, 'status': 'skipped'})
+            results.append({"name": report.nodeid, "status": "skipped"})
 
         # Save tracebacks to JSON Lines
         if tracebacks:
             import json
-            result_dir = os.path.join(os.getcwd(), 'testcato_result')
+
+            result_dir = os.path.join(os.getcwd(), "testcato_result")
             os.makedirs(result_dir, exist_ok=True)
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-            jsonl_path = os.path.join(result_dir, f'test_run_{timestamp}.jsonl')
-            with open(jsonl_path, 'w', encoding='utf-8') as f:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            jsonl_path = os.path.join(result_dir, f"test_run_{timestamp}.jsonl")
+            with open(jsonl_path, "w", encoding="utf-8") as f:
                 for tb in tracebacks:
-                    f.write(json.dumps(tb, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(tb, ensure_ascii=False) + "\n")
             terminalreporter.write_line(f"Tracebacks saved to {jsonl_path}")
 
         categorizer = TestCategorizer()
@@ -57,9 +64,10 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             for test in tests:
                 terminalreporter.write_line(f"  {test}")
 
-    # Automatically send latest JSONL to AI agent and save debug file
+        # Automatically send latest JSONL to AI agent and save debug file
         try:
             from .ai_agent import debug_latest_jsonl
+
             debug_latest_jsonl()
         except Exception as e:
             terminalreporter.write_line(f"Error sending JSONL to AI agent: {e}")
