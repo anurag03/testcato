@@ -1,6 +1,6 @@
 import os
 import glob
-import xml.etree.ElementTree as ET
+## import xml.etree.ElementTree as ET  # No longer needed, switched to JSONL
 import datetime
 import requests
 import yaml
@@ -51,7 +51,7 @@ def send_to_ai_agent(agent, test_name, traceback):
     print(f"{RED}TESTCATO AI agent error for test '{test_name}': {response.status_code} - {response.text}{RESET}")
     return "AI agent failed to respond."
 
-def debug_latest_xml():
+def debug_latest_jsonl():
     # Generate debug JSONL and HTML report after lines, result_dir, and timestamp are defined
     result_dir = os.path.join(os.getcwd(), 'testcato_result')
     config_path = os.path.join(os.getcwd(), 'testcato_config.yaml')
@@ -98,7 +98,9 @@ def debug_latest_xml():
     with open(debug_jsonl_path, 'w', encoding='utf-8') as f:
         for line in lines:
             f.write(json.dumps(line, ensure_ascii=False) + '\n')
-    print(f"Debug results saved to {debug_jsonl_path}")
+    GREEN = '\033[32m'
+    RESET = '\033[0m'
+    print(f"{GREEN}Debug results saved to {debug_jsonl_path}{RESET}")
 
     # Also generate a human-readable HTML report
     html_path = os.path.join(result_dir, f'test_debug_{timestamp}.html')
@@ -115,4 +117,4 @@ def debug_latest_xml():
             html.write(f'<td><pre>{line["debug_result"]}</pre></td>')
             html.write('</tr>')
         html.write('</table></body></html>')
-    print(f"HTML debug report saved to {html_path}")
+    print(f"{GREEN}HTML debug report saved to {html_path}{RESET}")
