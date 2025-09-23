@@ -5,8 +5,8 @@ import datetime
 import requests
 import yaml
 
-def get_latest_xml(result_dir):
-    files = glob.glob(os.path.join(result_dir, 'test_run_*.xml'))
+def get_latest_jsonl(result_dir):
+    files = glob.glob(os.path.join(result_dir, 'test_run_*.jsonl'))
     if not files:
         return None
     return max(files, key=os.path.getctime)
@@ -31,22 +31,33 @@ def send_to_ai_agent(agent, test_name, traceback):
         'Authorization': f"Bearer {agent.get('api_key', '')}",
         'Content-Type': 'application/json'
     }
-    # The payload structure should be defined by the user in their config and usage
+    # Payload for OpenAI chat completions API
     payload = {
-        "test_name": test_name,
-        "traceback": traceback
+        "model": agent.get('model', 'gpt-4'),
+        "messages": [
+            {"role": "system", "content": "You are a helpful test debugging assistant."},
+            {"role": "user", "content": f"Debug this test failure: {test_name}\nTraceback:\n{traceback}"}
+        ]
     }
     response = requests.post(api_url, json=payload, headers=headers)
     if response.ok:
-        return response.text
+        try:
+            return response.json().get('choices', [{}])[0].get('message', {}).get('content', '')
+        except Exception:
+            return response.text
+    # Print error details in red to CLI for visibility
+    RED = '\033[31m'
+    RESET = '\033[0m'
+    print(f"{RED}TESTCATO AI agent error for test '{test_name}': {response.status_code} - {response.text}{RESET}")
     return "AI agent failed to respond."
 
 def debug_latest_xml():
+    # Generate debug JSONL and HTML report after lines, result_dir, and timestamp are defined
     result_dir = os.path.join(os.getcwd(), 'testcato_result')
     config_path = os.path.join(os.getcwd(), 'testcato_config.yaml')
-    latest_xml = get_latest_xml(result_dir)
-    if not latest_xml:
-        print("No test_run XML file found.")
+    latest_jsonl = get_latest_jsonl(result_dir)
+    if not latest_jsonl:
+        print("No test_run JSONL file found.")
         return
     agent = load_agent_config(config_path)
     if not agent:
@@ -62,24 +73,46 @@ def debug_latest_xml():
             print(warning_msg)
         return
     import json
-    tree = ET.parse(latest_xml)
-    root = tree.getroot()
     lines = []
-    for test_elem in root.findall('Test'):
-        name = test_elem.get('name')
-        tb_elem = test_elem.find('Traceback')
-        debug_result = None
-        if tb_elem is not None:
-            debug_result = send_to_ai_agent(agent, name, tb_elem.text)
-        line = {
-            "name": name,
-            "traceback": tb_elem.text if tb_elem is not None else None,
-            "debug": debug_result
-        }
-        lines.append(line)
+    with open(latest_jsonl, 'r', encoding='utf-8') as f:
+        for raw_line in f:
+            try:
+                test_data = json.loads(raw_line)
+            except Exception:
+                continue
+            test_name = test_data.get('name') or test_data.get('test_name')
+            status = test_data.get('status', 'failed')
+            traceback = test_data.get('traceback')
+            debug_result = None
+            if traceback:
+                debug_result = send_to_ai_agent(agent, test_name, traceback)
+            line = {
+                "test_name": test_name,
+                "status": status,
+                "traceback": traceback,
+                "debug_result": debug_result
+            }
+            lines.append(line)
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    debug_jsonl_path = os.path.join(result_dir, f'test_debugg_{timestamp}.jsonl')
+    debug_jsonl_path = os.path.join(result_dir, f'test_debug_{timestamp}.jsonl')
     with open(debug_jsonl_path, 'w', encoding='utf-8') as f:
         for line in lines:
             f.write(json.dumps(line, ensure_ascii=False) + '\n')
     print(f"Debug results saved to {debug_jsonl_path}")
+
+    # Also generate a human-readable HTML report
+    html_path = os.path.join(result_dir, f'test_debug_{timestamp}.html')
+    with open(html_path, 'w', encoding='utf-8') as html:
+        html.write('<html><head><title>Test Debug Report</title></head><body>')
+        html.write('<h1>Test Debug Report</h1>')
+        html.write('<table border="1" cellpadding="5" cellspacing="0">')
+        html.write('<tr><th>Test Name</th><th>Status</th><th>Traceback</th><th>Debug Result</th></tr>')
+        for line in lines:
+            html.write('<tr>')
+            html.write(f'<td>{line["test_name"]}</td>')
+            html.write(f'<td>{line["status"]}</td>')
+            html.write(f'<td><pre>{line["traceback"]}</pre></td>')
+            html.write(f'<td><pre>{line["debug_result"]}</pre></td>')
+            html.write('</tr>')
+        html.write('</table></body></html>')
+    print(f"HTML debug report saved to {html_path}")
