@@ -2,7 +2,7 @@ import re
 import pytest
 import os
 import datetime
-import xml.etree.ElementTree as ET
+## import xml.etree.ElementTree as ET  # No longer needed, switched to JSONL
 from .categorizer import TestCategorizer
 
 def pytest_addoption(parser):
@@ -57,9 +57,9 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             for test in tests:
                 terminalreporter.write_line(f"  {test}")
 
-        # Automatically send latest XML to AI agent and save debug file
+    # Automatically send latest JSONL to AI agent and save debug file
         try:
-            from .ai_agent import debug_latest_xml
-            debug_latest_xml()
+            from .ai_agent import debug_latest_jsonl
+            debug_latest_jsonl()
         except Exception as e:
-            terminalreporter.write_line(f"Error sending XML to AI agent: {e}")
+            terminalreporter.write_line(f"Error sending JSONL to AI agent: {e}")

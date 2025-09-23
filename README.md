@@ -22,25 +22,27 @@ print(categories)
 
 ## Test Results Output
 
-When you run pytest with the `--testcato` option, a folder named `testcato_result` will be automatically created in your working directory (if it does not exist). This folder will contain XML files with detailed tracebacks for failed tests. Each XML file is named with a timestamp, e.g., `test_run_YYYYMMDD_HHMMSS.xml`.
+When you run pytest with the `--testcato` option, a folder named `testcato_result` will be automatically created in your working directory (if it does not exist). This folder will contain JSONL files with detailed tracebacks for failed tests. Each JSONL file is named with a timestamp, e.g., `test_run_YYYYMMDD_HHMMSS.jsonl`.
 
 ## Configuration File
 
-`testcato_config.yaml` is a configuration file for specifying AI agents and their details. It is automatically created in your working directory when you import or install the package, if not already present. You can add multiple agents (e.g., `agent1`, `agent2`) and set a default agent:
+`testcato_config.yaml` is a configuration file for specifying AI agents and their details. It is automatically created in your working directory when you import or install the package, if not already present.
+
+**Current AI Support:**
+- Only GPT (OpenAI) models are supported for automated test result debugging.
+- You must configure your GPT agent in the config file (see example below).
+- The default agent should be set to your GPT agent (e.g., `default: gpt`).
+
+**Planned Future Support:**
+- Support for other AI models and providers (such as Azure, Anthropic, etc.) will be added in future releases. You can prepare additional agent sections in your config for future use.
 
 ```yaml
-# default: agent1
+# default: gpt
 #
-# agent1:
+# gpt:
 #   type: openai
 #   model: gpt-4
 #   api_key: YOUR_OPENAI_API_KEY
-#
-# Add more agents below as agent2, agent3, etc.
-# agent2:
-#   type: azure
-#   model: gpt-4
-#   api_key: YOUR_AZURE_API_KEY
-```
+#   api_url: https://api.openai.com/v1/chat/completions
 
 Uncomment and edit fields as needed for your use case.
