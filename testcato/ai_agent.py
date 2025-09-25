@@ -3,11 +3,17 @@ import glob
 
 # import xml.etree.ElementTree as ET  # No longer needed, switched to JSONL
 import datetime
-import requests
 import yaml
+from .llm_providers import get_provider
 
 
 def get_latest_jsonl(result_dir):
+    """
+    Get the latest test_run JSONL file from the result directory.
+
+    :param result_dir: Directory containing test_run JSONL files
+    :return: Latest test_run JSONL file path or None if no files are found
+    """
     files = glob.glob(os.path.join(result_dir, "test_run_*.jsonl"))
     if not files:
         return None
@@ -15,6 +21,12 @@ def get_latest_jsonl(result_dir):
 
 
 def load_agent_config(config_path):
+    """
+    Load AI agent configuration from a YAML file.
+
+    :param config_path: Path to the YAML configuration file
+    :return: Configured AI agent or None if the configuration is invalid
+    """
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     if not isinstance(config, dict):
@@ -28,49 +40,41 @@ def load_agent_config(config_path):
 
 
 def send_to_ai_agent(agent, test_name, traceback):
-    api_url = agent.get("api_url")
-    if not api_url:
-        return "No api_url provided in agent config."
-    headers = {
-        "Authorization": f"Bearer {agent.get('api_key', '')}",
-        "Content-Type": "application/json",
-    }
-    # Payload for OpenAI chat completions API
-    payload = {
-        "model": agent.get("model", "gpt-4"),
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a helpful test debugging assistant.",
-            },
-            {
-                "role": "user",
-                "content": f"Debug this test failure: {test_name}\nTraceback:\n{traceback}",
-            },
-        ],
-    }
-    response = requests.post(api_url, json=payload, headers=headers)
-    if response.ok:
-        try:
-            return (
-                response.json()
-                .get("choices", [{}])[0]
-                .get("message", {})
-                .get("content", "")
-            )
-        except Exception:
-            return response.text
-    # Print error details in red to CLI for visibility
-    RED = "\033[31m"
-    RESET = "\033[0m"
-    print(
-        f"{RED}TESTCATO AI agent error for test '{test_name}': {response.status_code} - {response.text}{RESET}"
-    )
-    return "AI agent failed to respond."
+    """
+    Send a test failure to an AI agent for debugging assistance.
+
+    :param agent: AI agent config
+    :param test_name: Name of the test that failed
+    :param traceback: Traceback of the test failure
+    :return: Debugging response from the AI agent
+    """
+    try:
+        provider = get_provider(agent)
+        return provider.send_request(test_name, traceback)
+    except ValueError as e:
+        # Print error details in red to CLI for visibility
+        RED = "\033[31m"
+        RESET = "\033[0m"
+        error_message = f"TESTCATO AI agent error for test '{test_name}': {e}"
+        print(f"{RED}{error_message}{RESET}")
+        return "AI agent failed to respond due to a configuration error."
+    except Exception as e:
+        # General exception for other issues like network errors
+        RED = "\033[31m"
+        RESET = "\03_3[0m"
+        error_message = f"TESTCATO AI agent error for test '{test_name}': An unexpected error occurred: {e}"
+        print(f"{RED}{error_message}{RESET}")
+        return "AI agent failed to respond due to an unexpected error."
 
 
 def debug_latest_jsonl():
-    # Generate debug JSONL and HTML report after lines, result_dir, and timestamp are defined
+    """
+    Generate debug JSONL and HTML report after lines, result_dir, and timestamp are defined.
+
+    This function loads the latest test_run JSONL file from result_dir and
+    sends its tracebacks to the configured AI agent. The AI agent's responses
+    are then saved to a debug JSONL file and an HTML report in result_dir.
+    """
     result_dir = os.path.join(os.getcwd(), "testcato_result")
     config_path = os.path.join(os.getcwd(), "testcato_config.yaml")
     latest_jsonl = get_latest_jsonl(result_dir)
