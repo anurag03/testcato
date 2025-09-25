@@ -1,13 +1,21 @@
 # testcato_config.yaml
 
+# When using multiple agents, you can specify which agent to use for each task
+# or mark the default agent using the 'default' field.
+default: agent1
 
-# default: gpt
-#
-# When using multiple agents, you can specify which agent to use for each task or mark the default agent using the above 'default' field.
-#
-# gpt:
-#   type: openai
-#   model: gpt-4.1-mini
-#   api_key: <YOUR_OPENAI_API_KEY>
-#   api_url: https://api.openai.com/v1/chat/completions
+# It's recommended to use environment variables for sensitive data like API keys.
+# Example: api_key: "env:OPENAI_API_KEY"
+# The "env:" prefix tells the loader to get the value from the environment variable.
+agent1:
+  provider: "openai"  # Specify the provider, e.g., "openai", "anthropic"
+  api_key: "env:OPENAI_API_KEY"
+  api_url: "https://api.openai.com/v1/chat/completions"
+  model: "gpt-4"
 
+# Example for another provider (e.g., Anthropic)
+# agent2:
+#   provider: "anthropic"
+#   api_key: "env:ANTHROPIC_API_KEY"
+#   api_url: "https://api.anthropic.com/v1/messages"
+#   model: "claude-3-opus-20240229"
