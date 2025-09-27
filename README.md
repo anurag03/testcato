@@ -1,117 +1,102 @@
 # testcato
 
-A Python package for categorizing test results (passed, failed, skipped) and enabling AI-assisted 
-debugging of test failures.
+A Python package for automatically categorizing pytest test results (passed, failed, skipped) and
+enabling AI-assisted debugging of test failures.
+
+## Install
+
+```bash
+pip install testcato
+```
+
 
 ## Project Structure
 
-- `testcato/` - main package directory  
-  - `categorizer.py` - core logic for categorizing test results  
-  - `llm_provider.py` - module to add support for different large language models (LLMs)  
-- `tests/` - unit tests for the package  
-- `setup.py` - package setup configuration  
-- `requirements.txt` - dependencies  
-- `LICENSE` - license file  
+- `testcato/` - main package directory
+    - `categorizer.py` - core logic for categorizing test results
+    - `llm_provider.py` - module to add support for different large language models (LLMs)
+- `tests/` - unit tests for the package
+- `setup.py` - package setup configuration
+- `requirements.txt` - dependencies
+- `LICENSE` - license file
 
-## Quick Start
-```python
-from testcato.categorizer import TestCategorizer
 
-categorizer = TestCategorizer()
-test_results = [    {'name': 'test_one', 'status': 'passed'},
-    {'name': 'test_two', 'status': 'failed'}
-]
-categories = categorizer.categorize(test_results)
-print(categories)
+## Features
+
+- Automatically categorize pytest test results into structured categories like passed, failed, and skipped.
+- Generate detailed JSONL reports with tracebacks for failed tests, timestamped for easy reference.
+- AI-assisted debugging support for failed tests using integrated GPT models.
+- Easily add support for other LLM providers via a modular llm_provider system.
+- Runs seamlessly with the `--testcato` pytest option to enable enhanced test reporting.
+- Configuration via an automatically created `testcato_config.yaml` file for AI agent setup.
+
+
+## Usage with pytest
+
+Run pytest with the `--testcato` flag to enable the collection and categorization of test results.
+
+```bash
+pytest --testcato
 ```
 
-### Test Results Output
-When running pytest with the `--testcato` option, a folder named testcato_result will be
-automatically created in your working directory (if it does not exist). This folder contains JSONL
-files with detailed tracebacks for failed tests. Each JSONL file is named with a timestamp, e.g.,
-test_run_YYYYMMDD_HHMMSS.jsonl.
+This will create a `testcato_result` folder in your working directory containing JSONL files with
+detailed failure information.
 
-### Configuration File
-The `testcato_config.yaml` file specifies AI agents and their details. It is automatically created
-in your working directory when you import or install the package, if not already present.
+## Configuration
 
-### Current AI Support
-Only GPT (OpenAI) models are supported for automated test result debugging.
-You must configure your GPT agent in the config file (see example below).
-The default agent should be set to your GPT agent (e.g., default: gpt).
-
-### Planned Future Support
-Support for other AI models and providers (such as Azure, Anthropic, etc.) will be added in
-future releases. You can prepare additional agent sections in your config for future use.
+The `testcato_config.yaml` file will be generated automatically when you first import or install the
+package, if it doesn't already exist. Configure your AI agents here, for example:
 
 ```yaml
-# default: gpt
-#
-# gpt:
-#   type: openai
-#   model: gpt-4
-#   api_key: YOUR_OPENAI_API_KEY
-#   api_url: https://api.openai.com/v1/chat/completions
+default: gpt
+
+gpt:
+  type: openai
+  model: gpt-4
+  api_key: YOUR_OPENAI_API_KEY
+  api_url: https://api.openai.com/v1/chat/completions
 ```
 
-### Security Tip: 
-Avoid committing API keys to version control. Use environment variables or secret
-managers where possible.
+Avoid committing API keys to version control; use environment variables or secret managers instead.
 
-### Adding Support for New LLMs
-This project supports integration with various large language models (LLMs) through the
-llm_provider.py module. To add support for a new LLM provider, follow these steps:
+## Adding Support for New LLM Providers
 
-### Implement the LLM Provider Interface
+- To add support for other large language models, implement the provider interface in `llm_provider.py`,
+register your provider, and update the configuration.
+- If the package uses a registry or factory pattern for LLM providers, add your new provider to the registry
+so it can be selected dynamically based on configuration or parameters.
 
-In the llm_provider.py file, create a new class or function that implements the interface
-expected by the package. This typically involves:
+Example provider skeleton:
 
-Defining how to authenticate with the LLM API (e.g., API keys, tokens).
-Implementing methods to send prompts or requests to the LLM.
-Handling responses and errors according to the package conventions.
-Register the New Provider
-
-If the package uses a registry or factory pattern for LLM providers, add your new provider
-to the registry so it can be selected dynamically based on configuration or parameters.
-
-### Configure the Package
-
-Update your configuration (e.g., YAML or environment variables) to specify the new LLM provider
-and any necessary credentials or settings.
-
-### Test the Integration
-
-Write tests or run existing test suites to verify that the new provider works as expected
-within the package.
-
-### Example
 ```python
-
 class MyNewLLMProvider:
     def __init__(self, api_key):
         self.api_key = api_key
 
     def send_prompt(self, prompt):
-        # Implement API call to the new LLM here
-        response = ...  # call API with prompt and api_key
+        # Implement API call here
+        response = ...  # Call API with prompt and api_key
         return response.get("text", "")
 ```
 
-After implementing, configure your package to use MyNewLLMProvider by updating the relevant
-settings.
 
-## Running Tests
-Unit tests are located in the tests/ directory. To run tests, it is recommended to use
-pytest:
+## Testing
 
-`pytest
-Make sure to install development dependencies from requirements.txt before running tests.
+Unit tests are located in the `tests/` directory. Install development dependencies and run tests using pytest:
 
-## Troubleshooting & Notes
-If testcato_config.yaml is missing or malformed, debugging features will be disabled.
-Please ensure the config file exists and is correctly formatted.
+```bash
+pip install -r requirements.txt
+pytest
+```
 
-When running pytest, use the --testcato option to enable testcato features:
 
-`pytest --
+## Troubleshooting
+
+If `testcato_config.yaml` is missing or malformed, AI debugging features will be disabled. Ensure the config
+file exists and is properly formatted.
+
+When running pytest, use the `--testcato` option to enable testcato features:
+
+```bash
+pytest --testcato
+```
